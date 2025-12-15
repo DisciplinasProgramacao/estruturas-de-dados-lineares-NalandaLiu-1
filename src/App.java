@@ -207,13 +207,87 @@ public class App {
      * @param pedido O pedido que deve ser finalizado.
      */
     public static void finalizarPedido(Pedido pedido) {
-    	
-    	// TODO
+    	cabecalho();
+    	if (pedido == null) {
+    		System.out.println("Nenhum pedido em andamento para finalizar.");
+    		return;
+    	}
+
+    	pilhaPedidos.empilhar(pedido);
+    	System.out.println("Pedido finalizado e armazenado na pilha de pedidos.");
     }
     
     public static void listarProdutosPedidosRecentes() {
-    	
-    	// TODO
+    	cabecalho();
+    	if (pilhaPedidos.vazia()) {
+    		System.out.println("Nenhum pedido finalizado ainda.");
+    		return;
+    	}
+
+    	// Número de pedidos mais recentes a considerar
+    	int numPedidos = 3;
+    	Pilha<Pedido> recentes = null;
+        int pedidosConsiderados = numPedidos;
+
+    	try {
+    		recentes = pilhaPedidos.subPilha(numPedidos);
+    	} catch (IllegalArgumentException ex) {
+    		// A pilha tem menos do que numPedidos. Contar quantos existem sem perder os itens.
+    		Pilha<Pedido> aux = new Pilha<>();
+    		int count = 0;
+    		while (!pilhaPedidos.vazia()) {
+    			aux.empilhar(pilhaPedidos.desempilhar());
+    			count++;
+    		}
+    		// Restaurar pilha original
+    		while (!aux.vazia()) {
+    			pilhaPedidos.empilhar(aux.desempilhar());
+    		}
+
+    		if (count == 0) {
+    			System.out.println("Nenhum pedido finalizado ainda.");
+    			return;
+    		}
+
+            pedidosConsiderados = count;
+
+            recentes = pilhaPedidos.subPilha(count);
+    	}
+
+     
+        Produto[] listaProdutos = new Produto[pedidosConsiderados * 10]; 
+        int listaCount = 0;
+
+        while (!recentes.vazia()) {
+            Pedido p = recentes.desempilhar();
+            Produto[] prods = p.getProdutos();
+            int q = p.getQuantosProdutos();
+            for (int i = 0; i < q; i++) {
+                Produto prod = prods[i];
+                if (prod != null) {
+                    boolean encontrado = false;
+                    for (int j = 0; j < listaCount; j++) {
+                        if (listaProdutos[j].equals(prod)) {
+                            encontrado = true;
+                            break;
+                        }
+                    }
+                    if (!encontrado) {
+                        listaProdutos[listaCount++] = prod;
+                    }
+                }
+            }
+        }
+
+        if (listaCount == 0) {
+            System.out.println("Nenhum produto encontrado nos pedidos recentes.");
+            return;
+        }
+
+        System.out.println("Produtos presentes nos " + pedidosConsiderados + " pedidos mais recentes:");
+        for (int i = 0; i < listaCount; i++) {
+            System.out.println(listaProdutos[i].toString());
+        }
     }
     
 	public static void main(String[] args) {

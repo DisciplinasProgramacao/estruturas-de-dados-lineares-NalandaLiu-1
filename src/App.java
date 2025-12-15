@@ -224,7 +224,7 @@ public class App {
     		return;
     	}
 
-    	// Número de pedidos mais recentes a considerar
+    
     	int numPedidos = 3;
     	Pilha<Pedido> recentes = null;
         int pedidosConsiderados = numPedidos;
@@ -232,14 +232,14 @@ public class App {
     	try {
     		recentes = pilhaPedidos.subPilha(numPedidos);
     	} catch (IllegalArgumentException ex) {
-    		// A pilha tem menos do que numPedidos. Contar quantos existem sem perder os itens.
+    	
     		Pilha<Pedido> aux = new Pilha<>();
     		int count = 0;
     		while (!pilhaPedidos.vazia()) {
     			aux.empilhar(pilhaPedidos.desempilhar());
     			count++;
     		}
-    		// Restaurar pilha original
+    
     		while (!aux.vazia()) {
     			pilhaPedidos.empilhar(aux.desempilhar());
     		}

@@ -70,6 +70,9 @@ public class App {
         System.out.println("7 - Exibir valor médio dos N primeiros pedidos");
         System.out.println("8 - Exibir pedidos com valor total acima de um determinado valor");
         System.out.println("9 - Exibir pedidos que contêm um determinado produto");
+        System.out.println("10 - Exibir o faturamento do comércio de produtos");
+        System.out.println("11 - Exibir a quantidade de pedidos realizados em um determinado período.");
+
         System.out.println("0 - Sair");
         System.out.print("Digite sua opção: ");
         return Integer.parseInt(teclado.nextLine());
@@ -386,7 +389,64 @@ public class App {
     		filtrada.imprimir();
     	} catch (IllegalArgumentException ex) {
     		System.out.println("Erro: " + ex.getMessage());
-    	}
+    	}  }
+    
+
+    public static void obterFaturamento() {
+        cabecalho();
+        
+        Lista<Pedido> listaPedidos = new Lista<>();
+        Fila<Pedido> temp = new Fila<>();
+        
+        while (!filaPedidos.vazia()) {
+            Pedido p = filaPedidos.desenfileirar();
+         listaPedidos.inserir(p, listaPedidos.tamanho());
+            temp.enfileirar(p);
+        }
+     
+        while (!temp.vazia()) {
+            filaPedidos.enfileirar(temp.desenfileirar());
+        }
+        
+        double faturamento = listaPedidos.obterSoma(p -> p.valorFinal());
+        
+        System.out.println("Faturamento total: " + String.format("%.2f", faturamento));
+    }
+    
+    /**
+     * Lê da entrada padrão uma data inicial e uma data final e exibe a quantidade de pedidos realizados entre essas datas.
+     * Somente pedidos com data estritamente posterior à data inicial e anterior à data final são considerados.
+     * Utiliza a função contar da classe Lista<E> para obter a contagem.
+     */
+    public static void contarPedidosPorData() {
+        cabecalho();
+        
+        if (filaPedidos.vazia()) {
+            System.out.println("Nenhum pedido finalizado para contar.");
+            return;
+        }
+        
+        System.out.println("Digite data inicial (YYYY-MM-DD):");
+        LocalDate dataInicial = LocalDate.parse(teclado.nextLine());
+        System.out.println("Digite data final (YYYY-MM-DD):");
+        LocalDate dataFinal = LocalDate.parse(teclado.nextLine());
+        
+        Lista<Pedido> listaPedidos = new Lista<>();
+        Fila<Pedido> temp = new Fila<>();
+        
+        while (!filaPedidos.vazia()) {
+            Pedido p = filaPedidos.desenfileirar();
+            listaPedidos.inserir(p, listaPedidos.tamanho());
+            temp.enfileirar(p);
+        }
+        
+        while (!temp.vazia()) {
+            filaPedidos.enfileirar(temp.desenfileirar());
+        }
+        
+        int quantidade = listaPedidos.contar(p -> p.getDataPedido().isAfter(dataInicial) && p.getDataPedido().isBefore(dataFinal));
+        
+        System.out.println("Quantidade de pedidos realizados entre " + dataInicial + " e " + dataFinal + ": " + quantidade);
     }
     
 	public static void main(String[] args) {
@@ -406,12 +466,14 @@ public class App {
                 case 1 -> listarTodosOsProdutos();
                 case 2 -> mostrarProduto(localizarProduto());
                 case 3 -> mostrarProduto(localizarProdutoDescricao());
-                case 4 -> pedido = iniciarPedido();
-                case 5 -> finalizarPedido(pedido);
+                case 4 -> iniciarPedido();
+                case 5 -> finalizarPedido();
                 case 6 -> listarProdutosPedidosRecentes();
                 case 7 -> exibirValorMedioPedidos();
                 case 8 -> exibirPedidosPorValor();
                 case 9 -> exibirPedidosPorProduto();
+                case 10 -> obterFaturamento();
+                case 11 -> contarPedidosPorData();
             }
             pausa();
         }while(opcao != 0);       

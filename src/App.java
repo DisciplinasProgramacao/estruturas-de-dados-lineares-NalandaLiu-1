@@ -21,6 +21,9 @@ public class App {
 
     /** Pilha de pedidos */
     static Pilha<Pedido> pilhaPedidos = new Pilha<>();
+    
+    /** Fila de pedidos */
+    static Fila<Pedido> filaPedidos = new Fila<>();
         
     static void limparTela() {
         System.out.print("\033[H\033[2J");
@@ -64,6 +67,9 @@ public class App {
         System.out.println("4 - Iniciar novo pedido");
         System.out.println("5 - Fechar pedido");
         System.out.println("6 - Listar produtos dos pedidos mais recentes");
+        System.out.println("7 - Exibir valor médio dos N primeiros pedidos");
+        System.out.println("8 - Exibir pedidos com valor total acima de um determinado valor");
+        System.out.println("9 - Exibir pedidos que contêm um determinado produto");
         System.out.println("0 - Sair");
         System.out.print("Digite sua opção: ");
         return Integer.parseInt(teclado.nextLine());
@@ -214,7 +220,8 @@ public class App {
     	}
 
     	pilhaPedidos.empilhar(pedido);
-    	System.out.println("Pedido finalizado e armazenado na pilha de pedidos.");
+    	filaPedidos.enfileirar(pedido);
+    	System.out.println("Pedido finalizado e armazenado.");
     }
     
     public static void listarProdutosPedidosRecentes() {
@@ -224,7 +231,7 @@ public class App {
     		return;
     	}
 
-    	// Número de pedidos mais recentes a considerar
+    
     	int numPedidos = 3;
     	Pilha<Pedido> recentes = null;
         int pedidosConsiderados = numPedidos;
@@ -232,14 +239,14 @@ public class App {
     	try {
     		recentes = pilhaPedidos.subPilha(numPedidos);
     	} catch (IllegalArgumentException ex) {
-    		// A pilha tem menos do que numPedidos. Contar quantos existem sem perder os itens.
+    	
     		Pilha<Pedido> aux = new Pilha<>();
     		int count = 0;
     		while (!pilhaPedidos.vazia()) {
     			aux.empilhar(pilhaPedidos.desempilhar());
     			count++;
     		}
-    		// Restaurar pilha original
+    
     		while (!aux.vazia()) {
     			pilhaPedidos.empilhar(aux.desempilhar());
     		}
@@ -290,6 +297,98 @@ public class App {
         }
     }
     
+    /**
+     * Exibe o valor total médio dos N primeiros pedidos da fila.
+     */
+    public static void exibirValorMedioPedidos() {
+    	cabecalho();
+    	
+    	if (filaPedidos.vazia()) {
+    		System.out.println("Nenhum pedido finalizado para calcular a média.");
+    		return;
+    	}
+    	
+    	int quantidade = lerOpcao("Digite a quantidade de pedidos para calcular a média:", Integer.class);
+    	
+    	try {
+    		double media = filaPedidos.calcularValorMedio(p -> p.valorFinal(), quantidade);
+    		System.out.println(String.format("Valor médio dos %d primeiros pedidos: R$ %.2f", quantidade, media));
+    	} catch (IllegalArgumentException ex) {
+    		System.out.println("Erro: " + ex.getMessage());
+    	} catch (Exception ex) {
+    		System.out.println("Erro: A fila não contém " + quantidade + " pedidos.");
+    	}
+    }
+    
+    /**
+     * Exibe os primeiros pedidos com valor total acima de um determinado valor.
+     */
+    public static void exibirPedidosPorValor() {
+    	cabecalho();
+    	
+    	if (filaPedidos.vazia()) {
+    		System.out.println("Nenhum pedido finalizado para filtrar.");
+    		return;
+    	}
+    	
+    	double valorMinimo = Double.parseDouble(teclado.nextLine());
+    	System.out.print("Digite a quantidade de pedidos a analisar: ");
+    	int quantidade = Integer.parseInt(teclado.nextLine());
+    	
+    	try {
+    		Fila<Pedido> filtrada = filaPedidos.filtrar(p -> p.valorFinal() >= valorMinimo, quantidade);
+    		
+    		if (filtrada.vazia()) {
+    			System.out.println("Nenhum pedido encontrado com valor acima de R$ " + String.format("%.2f", valorMinimo));
+    			return;
+    		}
+    		
+    		System.out.println("Pedidos com valor total acima de R$ " + String.format("%.2f", valorMinimo) + ":");
+    		filtrada.imprimir();
+    	} catch (IllegalArgumentException ex) {
+    		System.out.println("Erro: " + ex.getMessage());
+    	}
+    }
+    
+    /**
+     * Exibe os primeiros pedidos que contêm um determinado produto.
+     */
+    public static void exibirPedidosPorProduto() {
+    	cabecalho();
+    	
+    	if (filaPedidos.vazia()) {
+    		System.out.println("Nenhum pedido finalizado para filtrar.");
+    		return;
+    	}
+    	
+    	System.out.println("Digite o nome do produto que deseja procurar:");
+    	String nomeProduto = teclado.nextLine();
+    	System.out.print("Digite a quantidade de pedidos a analisar: ");
+    	int quantidade = Integer.parseInt(teclado.nextLine());
+    	
+    	try {
+    		Fila<Pedido> filtrada = filaPedidos.filtrar(p -> {
+    			Produto[] produtos = p.getProdutos();
+    			for (int i = 0; i < p.getQuantosProdutos(); i++) {
+    				if (produtos[i].descricao.equals(nomeProduto)) {
+    					return true;
+    				}
+    			}
+    			return false;
+    		}, quantidade);
+    		
+    		if (filtrada.vazia()) {
+    			System.out.println("Nenhum pedido encontrado contendo o produto \"" + nomeProduto + "\".");
+    			return;
+    		}
+    		
+    		System.out.println("Pedidos contendo o produto \"" + nomeProduto + "\":");
+    		filtrada.imprimir();
+    	} catch (IllegalArgumentException ex) {
+    		System.out.println("Erro: " + ex.getMessage());
+    	}
+    }
+    
 	public static void main(String[] args) {
 		
 		teclado = new Scanner(System.in, Charset.forName("UTF-8"));
@@ -310,6 +409,9 @@ public class App {
                 case 4 -> pedido = iniciarPedido();
                 case 5 -> finalizarPedido(pedido);
                 case 6 -> listarProdutosPedidosRecentes();
+                case 7 -> exibirValorMedioPedidos();
+                case 8 -> exibirPedidosPorValor();
+                case 9 -> exibirPedidosPorProduto();
             }
             pausa();
         }while(opcao != 0);       
